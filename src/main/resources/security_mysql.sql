@@ -1,101 +1,71 @@
--- phpMyAdmin SQL Dump
--- version 3.2.4
--- http://www.phpmyadmin.net
---
--- Host: localhost
--- Generation Time: Jan 26, 2011 at 04:34 PM
--- Server version: 5.1.41
--- PHP Version: 5.3.1
- 
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
- 
---
--- Database: `acl`
---
- 
--- --------------------------------------------------------
- 
---
--- Table structure for table `acl_sid`
---
- 
-CREATE TABLE IF NOT EXISTS `acl_sid` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `principal` tinyint(1) NOT NULL,
-  `sid` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_uk_1` (`sid`,`principal`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
- 
--- --------------------------------------------------------
- 
---
--- Table structure for table `acl_class`
---
- 
-CREATE TABLE IF NOT EXISTS `acl_class` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `class` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_uk_2` (`class`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
- 
--- --------------------------------------------------------
- 
---
--- Table structure for table `acl_entry`
---
- 
-CREATE TABLE IF NOT EXISTS `acl_entry` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `acl_object_identity` bigint(20) NOT NULL,
-  `ace_order` int(11) NOT NULL,
-  `sid` bigint(20) NOT NULL,
-  `mask` int(11) NOT NULL,
-  `granting` tinyint(1) NOT NULL,
-  `audit_success` tinyint(1) NOT NULL,
-  `audit_failure` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_uk_4` (`acl_object_identity`,`ace_order`),
-  KEY `foreign_fk_5` (`sid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=43 ;
- 
--- --------------------------------------------------------
- 
---
--- Table structure for table `acl_object_identity`
---
- 
-CREATE TABLE IF NOT EXISTS `acl_object_identity` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `object_id_class` bigint(20) NOT NULL,
-  `object_id_identity` bigint(20) NOT NULL,
-  `parent_object` bigint(20) DEFAULT NULL,
-  `owner_sid` bigint(20) DEFAULT NULL,
-  `entries_inheriting` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_uk_3` (`object_id_class`,`object_id_identity`),
-  KEY `foreign_fk_1` (`parent_object`),
-  KEY `foreign_fk_3` (`owner_sid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=10 ;
- 
--- --------------------------------------------------------
- 
---
--- Constraints for dumped tables
---
- 
---
--- Constraints for table `acl_entry`
---
-ALTER TABLE `acl_entry`
-  ADD CONSTRAINT `foreign_fk_4` FOREIGN KEY (`acl_object_identity`) REFERENCES `acl_object_identity` (`id`),
-  ADD CONSTRAINT `foreign_fk_5` FOREIGN KEY (`sid`) REFERENCES `acl_sid` (`id`);
- 
---
--- Constraints for table `acl_object_identity`
---
-ALTER TABLE `acl_object_identity`
-  ADD CONSTRAINT `foreign_fk_1` FOREIGN KEY (`parent_object`) REFERENCES `acl_object_identity` (`id`),
-  ADD CONSTRAINT `foreign_fk_2` FOREIGN KEY (`object_id_class`) REFERENCES `acl_class` (`id`),
-  ADD CONSTRAINT `foreign_fk_3` FOREIGN KEY (`owner_sid`) REFERENCES `acl_sid` (`id`);
+create table users (
+    username varchar(50) not null primary key,
+    password varchar(50) not null,
+    enabled boolean not null
+) engine = InnoDb;
+
+create table authorities (
+    username varchar(50) not null,
+    authority varchar(50) not null,
+    foreign key (username) references users (username),
+    unique index authorities_idx_1 (username, authority)
+) engine = InnoDb;
+
+create table groups (
+    id bigint unsigned not null auto_increment primary key,
+    group_name varchar(50) not null
+) engine = InnoDb;
+
+create table group_authorities (
+    group_id bigint unsigned not null,
+    authority varchar(50) not null,
+    foreign key (group_id) references groups (id)
+) engine = InnoDb;
+
+create table group_members (
+    id bigint unsigned not null auto_increment primary key,
+    username varchar(50) not null,
+    group_id bigint unsigned not null,
+    foreign key (group_id) references groups (id)
+) engine = InnoDb;
+
+create table acl_sid (
+    id bigint unsigned not null auto_increment primary key,
+    principal tinyint(1) not null,
+    sid varchar(100) not null,
+    unique index acl_sid_idx_1 (sid, principal)
+) engine = InnoDb;
+
+create table acl_class (
+    id bigint unsigned not null auto_increment primary key,
+    class varchar(100) unique not null
+) engine = InnoDb;
+
+create table acl_object_identity (
+    id bigint unsigned not null auto_increment primary key,
+    object_id_class bigint unsigned not null,
+    object_id_identity bigint unsigned not null,
+    parent_object bigint unsigned,
+    owner_sid bigint unsigned,
+    entries_inheriting tinyint(1) not null,
+    unique index acl_object_identity_idx_1
+        (object_id_class, object_id_identity),
+    foreign key (object_id_class) references acl_class (id),
+    foreign key (parent_object) references acl_object_identity (id),
+    foreign key (owner_sid) references acl_sid (id)
+) engine = InnoDb;
+
+create table acl_entry (
+    id bigint unsigned not null auto_increment primary key,
+    acl_object_identity bigint unsigned not null,
+    ace_order int unsigned not null,
+    sid bigint unsigned not null,
+    mask int not null,
+    granting tinyint(1) not null,
+    audit_success tinyint(1) not null,
+    audit_failure tinyint(1) not null,
+    unique index acl_entry_idx_1 (acl_object_identity, ace_order),
+    foreign key (acl_object_identity)
+        references acl_object_identity (id),
+    foreign key (sid) references acl_sid (id)
+) engine = InnoDb;

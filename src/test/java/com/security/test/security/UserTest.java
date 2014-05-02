@@ -1,72 +1,56 @@
 package com.security.test.security;
 
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
-
-import java.util.Arrays;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
-import com.security.model.Authorities;
-import com.security.model.Users;
-import com.security.repository.UserRepository;
-import com.security.test.util.AbstractWebTest;
+import com.security.service.UserGroupManager;
+import com.security.test.util.AbstractSecurityTest;
 
 /**
  * @author Thiago
  * 
- * Execute essa classe para criação de usuarios de teste para dev.
- *
  */
-
-@Transactional
-public class UserTest extends AbstractWebTest {
+public class UserTest extends AbstractSecurityTest {
 	
-	@Autowired private UserRepository userRepository;
+	/**
+	 * 
+	 */
+	private static final String USER_NAME = "user";
+	private static final String ROLE_USER = "ROLE_USER";
+
+	@Autowired private UserGroupManager userGroupManager;
+	@Autowired private JdbcUserDetailsManager jdbcUserDetailsManager;
+	
+	private UserDetails user = null;
 	
 	@Before
 	public void setup() {
-		
-		List<Users> users = userRepository.findAll();
-		if (users.isEmpty()) {
-			Users u1 = new Users();
-			u1.setUsername("admin");
-			u1.setPassword("admin");
-			u1.setEnabled(true);
-			
-			Authorities a1 = new Authorities();
-			a1.setAuthority("ROLE_ADMIN");
-			a1.setUsername(u1);
-			
-			u1.setAuthorities(Arrays.asList(a1));
-			
-			Users u2 = new Users();
-			u2.setUsername("user");
-			u2.setPassword("user");
-			u2.setEnabled(true);
-			
-			Authorities a2 = new Authorities();
-			a2.setAuthority("ROLE_USER");
-			a2.setUsername(u2);
-			
-			u2.setAuthorities(Arrays.asList(a2));
-			
-			userRepository.save(Arrays.asList(u1, u2));
-		}
+		userGroupManager.createUserWithAuthoriy(USER_NAME, ROLE_USER);
+		user = jdbcUserDetailsManager.loadUserByUsername(USER_NAME);
+		userGroupManager.setAuthentication(USER_NAME);
 	}
 	
 	@Test
 	public void checkUser() {
-		assertThat(userRepository.findByUsername("admin"), isA(Users.class));
+		assertThat(user, is(notNullValue()));
+		assertThat(user, isA(UserDetails.class));
+		GrantedAuthority roleUser = new SimpleGrantedAuthority(ROLE_USER);
+		assertThat(user.getAuthorities().contains(roleUser), is(true));
 	}
 	
 	@After
 	public void tierDown() {
-		
+		jdbcUserDetailsManager.deleteUser(USER_NAME);
 	}
 }

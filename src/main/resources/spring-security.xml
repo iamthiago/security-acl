@@ -1,51 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans:beans xmlns="http://www.springframework.org/schema/security"
-	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 						http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
 						http://www.springframework.org/schema/security
 						http://www.springframework.org/schema/security/spring-security.xsd">
-						
-	<beans:import resource="spring-acl.xml"/>
-	
-	<beans:bean id="http403EntryPoint" class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint"/>
 
 	<global-method-security pre-post-annotations="enabled">
 		<expression-handler ref="expressionHandler"/>
 	</global-method-security>
 	
 	<http pattern="/resources/**" security="none"/>
+	
+	<beans:import resource="spring-acl.xml"/>
 
-	<http use-expressions="true" auto-config="false" entry-point-ref="http403EntryPoint">
-		
-		<intercept-url pattern="/security/login/**" access="permitAll"/>
-		<intercept-url pattern="/**" access="isAuthenticated()" />
-		
-		<session-management>
-			<concurrency-control error-if-maximum-exceeded="true" max-sessions="1"/>
-		</session-management>
+	<http auto-config="true" use-expressions="true">
+		<intercept-url pattern="/loginPage*" access="isAnonymous()"/>
+		<intercept-url pattern="/*" access="isAuthenticated()" />
 
+		<form-login 
+			login-page="/loginPage"
+			default-target-url="/" 
+			authentication-failure-url="/loginfailed"/>
+		
 		<logout 
 			invalidate-session="true"
 			delete-cookies="JSESSIONID" />
-			
 	</http>
-	
+
 	<authentication-manager>
 		<authentication-provider>
-			<jdbc-user-service
-				data-source-ref="dataSource"
-				group-authorities-by-username-query=
-				"select
-      				g.id, g.group_name, ga.authority
-      			from
-      				groups g, group_members gm, group_authorities ga
-      			where
-      				gm.username = ? and
-      				g.id = ga.group_id and
-      				g.id = gm.group_id"
-			/>
+			<jdbc-user-service data-source-ref="dataSource"/>
 		</authentication-provider>
 	</authentication-manager>
 </beans:beans>

@@ -1,7 +1,7 @@
 Spring Security Sample
 ============
 
-This is a simple project to show how to use Spring Security
+This is a simple project to show how to use Spring Security with Group Management and ACL
 
 To run this example, follow the next steps:
 

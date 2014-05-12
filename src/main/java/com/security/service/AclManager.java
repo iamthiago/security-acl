@@ -24,7 +24,7 @@ public interface AclManager {
 	 * 
 	 * @param clazz Domain class
 	 * @param identifier Id from the given domain
-	 * @param sid Security Identifier, could a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
+	 * @param sid Security Identifier, could be a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
 	 * @param permission The permission based on {@link BasePermission}
 	 */
 	public <T> void addPermission(Class<T> clazz, Serializable identifier, Sid sid, Permission permission);
@@ -34,7 +34,7 @@ public interface AclManager {
 	 * 
 	 * @param clazz Domain class
 	 * @param identifier Id from the given domain
-	 * @param sid Security Identifier, could a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
+	 * @param sid Security Identifier, could be a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
 	 * @param permission The permission based on {@link BasePermission}
 	 */
 	public <T> void removePermission(Class<T> clazz, Serializable identifier, Sid sid, Permission permission);
@@ -44,7 +44,7 @@ public interface AclManager {
 	 * 
 	 * @param clazz Domain class
 	 * @param identifier Id from the given domain
-	 * @param sid Security Identifier, could a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
+	 * @param sid Security Identifier, could be a {@link PrincipalSid} or a {@link GrantedAuthoritySid}
 	 * @param permission The permission based on {@link BasePermission}
 	 * @return true or false
 	 */

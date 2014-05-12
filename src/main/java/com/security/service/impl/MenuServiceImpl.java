@@ -37,7 +37,7 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	public Menu findByMenuNome(String nome) {
-		return menuRepository.findByNome(nome);
+		return menuRepository.findByName(nome);
 	}
 
 	@Override

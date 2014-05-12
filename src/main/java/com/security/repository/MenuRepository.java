@@ -10,6 +10,6 @@ import com.security.model.Menu;
  */
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 	
-	public Menu findByNome(String nome);
+	public Menu findByName(String name);
 
 }

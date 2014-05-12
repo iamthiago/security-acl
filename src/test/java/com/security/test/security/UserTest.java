@@ -50,7 +50,7 @@ public class UserTest extends AbstractSecurityTest {
 	}
 	
 	@After
-	public void tierDown() {
+	public void tearDown() {
 		jdbcUserDetailsManager.deleteUser(USER_NAME);
 	}
 }

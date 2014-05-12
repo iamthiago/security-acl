@@ -15,8 +15,9 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
@@ -41,9 +42,7 @@ public class SecurityAclTest extends AbstractSecurityTest {
 	private static final String USER_ADMIN = "admin";
 	private static final String USER_USER = "user";
 	
-	private UserDetails admin = null;
-	private UserDetails user = null;
-	private Menu eildMenu = null;
+	private Menu menu = null;
 	
 	@Rule public ExpectedException exception = ExpectedException.none();
 	
@@ -52,74 +51,92 @@ public class SecurityAclTest extends AbstractSecurityTest {
 		userGroupManager.createUserWithAuthoriy(USER_ADMIN, "ROLE_ADMIN");
 		userGroupManager.createUserWithAuthoriy(USER_USER, "ROLE_USER");
 		
-		admin = jdbcUserDetailsManager.loadUserByUsername(USER_ADMIN);
-		user = jdbcUserDetailsManager.loadUserByUsername(USER_USER);
-		
     	Menu p1 = new Menu();
-		p1.setNome("EILD");
-		p1.setPath("eild/consultar");
-		eildMenu = menuService.saveOrUpdate(p1);
+		p1.setName("Menu");
+		p1.setPath("/menu");
+		menu = menuService.saveOrUpdate(p1);
 		
 		userGroupManager.setAuthentication(USER_ADMIN);
-		aclManager.addSinglePermission(Menu.class, eildMenu.getId(), admin, BasePermission.ADMINISTRATION);
+		aclManager.addPermission(Menu.class, menu.getId(), new PrincipalSid(USER_ADMIN), BasePermission.ADMINISTRATION);
 	}
 	
 	@Test
-	public void testUserNaoTemAcessoEild() {
-		boolean isGranted = aclManager.isPermissionGrantedForUser(Menu.class, eildMenu.getId(), user, BasePermission.READ);
+	public void testUserHasNoAccessToMenu() {
+		boolean isGranted = aclManager.isPermissionGranted(Menu.class, menu.getId(), new PrincipalSid(USER_USER), BasePermission.READ);
 		assertThat(isGranted, is(false));
 	}
 	
 	@Test
-	public void testUserNaoTemAcessoEildComoRead() {
-		boolean isGranted = aclManager.isPermissionGrantedForUser(Menu.class, eildMenu.getId(), admin, BasePermission.READ);
+	public void testAdminHasNoAccessToMenuAsRead() {
+		boolean isGranted = aclManager.isPermissionGranted(Menu.class, menu.getId(), new PrincipalSid(USER_ADMIN), BasePermission.READ);
 		assertThat(isGranted, is(false));
 	}
 	
 	@Test
-	public void testUserTemAcessoEildComoAdministrador() {
-		boolean isGranted = aclManager.isPermissionGrantedForUser(Menu.class, eildMenu.getId(), admin, BasePermission.ADMINISTRATION);
+	public void testAdminHasAccessToMenuAsAdministration() {
+		boolean isGranted = aclManager.isPermissionGranted(Menu.class, menu.getId(), new PrincipalSid(USER_ADMIN), BasePermission.ADMINISTRATION);
 		assertThat(isGranted, is(true));
 	}
 	
 	@Test
-	public void testUserTemAcessoMetodoHasRole() {
+	public void testAdminHasAccessToMethodHasRoleAdmin() {
 		userGroupManager.setAuthentication(USER_ADMIN);
 		assertThat(securityTestService.testHasRoleAdmin(), is(true));
 	}
 	
 	@Test
-	public void testUserNaoTemAcessoMetodoHasRole() {
+	public void testUserHasNoAccessToMethodHasRoleAdmin() {
 		userGroupManager.setAuthentication(USER_USER);
 		exception.expect(AccessDeniedException.class);
 		securityTestService.testHasRoleAdmin();
 	}
 	
 	@Test
-	public void testUserTemAcessoMetodoHasPermissionAdministration() {
+	public void testAdminHasAccessToMethodHasPermissionAdministration() {
 		userGroupManager.setAuthentication(USER_ADMIN);
-		assertThat(securityTestService.testHasPermissionAdministrationOnMenu(eildMenu), is(true));
+		assertThat(securityTestService.testHasPermissionAdministrationOnMenu(menu), is(true));
 	}
 	
 	@Test
-	public void testUserNaoTemAcessoMetodoHasPermissionAdministration() {
+	public void testUserHasNoAccessToMethodHasPermissionAdministration() {
 		userGroupManager.setAuthentication(USER_USER);
 		exception.expect(AccessDeniedException.class);
-		securityTestService.testHasPermissionAdministrationOnMenu(eildMenu);
+		securityTestService.testHasPermissionAdministrationOnMenu(menu);
 	}
 	
 	@Test
-	public void testUserNaoTemAcessoMetodoHasPermissionRead() {
+	public void testUserHasNoAccessToMethodHasPermissionRead() {
 		userGroupManager.setAuthentication(USER_USER);
 		exception.expect(AccessDeniedException.class);
-		securityTestService.testHasPermissionReadOnMenu(eildMenu);
+		securityTestService.testHasPermissionReadOnMenu(menu);
 	}
 	
 	@Test
-	public void testUserAdminNaoTemAcessoMetodoHasPermissionRead() {
+	public void testAdminHasNoAccessToMethodPermissionRead() {
 		userGroupManager.setAuthentication(USER_ADMIN);
 		exception.expect(AccessDeniedException.class);
-		securityTestService.testHasPermissionReadOnMenu(eildMenu);
+		securityTestService.testHasPermissionReadOnMenu(menu);
+	}
+	
+	@Test
+	public void testUserHasAclPermissionBasedOnRole() {
+		aclManager.addPermission(Menu.class, menu.getId(), new GrantedAuthoritySid("ROLE_USER"), BasePermission.READ);
+		userGroupManager.setAuthentication(USER_USER);
+		assertThat(securityTestService.testHasPermissionReadOnMenu(menu), is(true));
+	}
+	
+	@Test
+	public void testRemoveAclPermissionFromUser() {
+		aclManager.addPermission(Menu.class, menu.getId(), new GrantedAuthoritySid("ROLE_USER"), BasePermission.READ);
+		userGroupManager.setAuthentication(USER_USER);
+		assertThat(securityTestService.testHasPermissionReadOnMenu(menu), is(true));
+		
+		userGroupManager.setAuthentication(USER_ADMIN);
+		aclManager.removePermission(Menu.class, menu.getId(), new GrantedAuthoritySid("ROLE_USER"), BasePermission.READ);
+		
+		userGroupManager.setAuthentication(USER_USER);
+		exception.expect(AccessDeniedException.class);
+		securityTestService.testHasPermissionReadOnMenu(menu);
 	}
 	
 	@Test
@@ -130,7 +147,7 @@ public class SecurityAclTest extends AbstractSecurityTest {
 	}
 	
 	@After
-	public void tierDown() {
+	public void tearDown() {
 		jdbcUserDetailsManager.deleteUser(USER_ADMIN);
 		jdbcUserDetailsManager.deleteUser(USER_USER);
 		menuService.deleteAll();

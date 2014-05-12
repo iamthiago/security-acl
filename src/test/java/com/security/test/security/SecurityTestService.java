@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.security.model.Menu;
 
 /**
- * Classe criada para fazer testes do spring security em métodos seguros
  * 
  * @author Thiago
  *

@@ -99,7 +99,7 @@ public class SecurityGroupsTest extends AbstractSecurityTest {
 	}
 	
 	@After
-	public void tierDown() {
+	public void tearDown() {
 		jdbcUserDetailsManager.deleteUser(USER_USER);
 		jdbcUserDetailsManager.deleteGroup(TEST_GROUP);
 		SecurityContextHolder.getContext().setAuthentication(null);

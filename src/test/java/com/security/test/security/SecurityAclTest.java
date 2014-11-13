@@ -3,6 +3,7 @@
  */
 package com.security.test.security;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -58,6 +59,14 @@ public class SecurityAclTest extends AbstractSecurityTest {
 		
 		userGroupManager.setAuthentication(USER_ADMIN);
 		aclManager.addPermission(Menu.class, menu.getId(), new PrincipalSid(USER_ADMIN), BasePermission.ADMINISTRATION);
+	}
+
+	@After
+	public void tearDown() {
+		jdbcUserDetailsManager.deleteUser(USER_ADMIN);
+		jdbcUserDetailsManager.deleteUser(USER_USER);
+		menuService.deleteAll();
+		SecurityContextHolder.getContext().setAuthentication(null);
 	}
 	
 	@Test
@@ -138,19 +147,38 @@ public class SecurityAclTest extends AbstractSecurityTest {
 		exception.expect(AccessDeniedException.class);
 		securityTestService.testHasPermissionReadOnMenu(menu);
 	}
+
+	@Test
+	public void testFilterList() {
+
+		menuService.deleteAll();
+
+		for (int i = 0; i < 5; i++) {
+			Menu m = new Menu();
+			m.setName("menu " + i);
+			m.setPath("/menu/" + i);
+
+			Menu newMenu = menuService.saveOrUpdate(m);
+
+			if (i < 3) {
+				aclManager.addPermission(Menu.class, newMenu.getId(), new GrantedAuthoritySid("ROLE_ADMIN"), BasePermission.ADMINISTRATION);
+			} else {
+				aclManager.addPermission(Menu.class, newMenu.getId(), new GrantedAuthoritySid("ROLE_USER"), BasePermission.READ);
+			}
+		}
+
+		userGroupManager.setAuthentication(USER_ADMIN);
+		assertThat(securityTestService.testFilterMenu(menuService.findAll()).size(), is(equalTo(3)));
+
+		userGroupManager.setAuthentication(USER_USER);
+		exception.expect(AccessDeniedException.class);
+		securityTestService.testFilterMenu(menuService.findAll());
+	}
 	
 	@Test
 	public void encodePassword() {
-		StandardPasswordEncoder encoder = new StandardPasswordEncoder("bda");
+		StandardPasswordEncoder encoder = new StandardPasswordEncoder("test");
 		String result = encoder.encode(USER_ADMIN);
 		assertTrue(encoder.matches(USER_ADMIN, result));
-	}
-	
-	@After
-	public void tearDown() {
-		jdbcUserDetailsManager.deleteUser(USER_ADMIN);
-		jdbcUserDetailsManager.deleteUser(USER_USER);
-		menuService.deleteAll();
-		SecurityContextHolder.getContext().setAuthentication(null);
 	}
 }

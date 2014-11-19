@@ -15,4 +15,5 @@ public interface MenuService {
 	void delete(Menu t);
 	Menu findByMenuNome(String nome);
 	void deleteAll();
+	List<Menu> testFilterMenu(List<Menu> menus);
 }

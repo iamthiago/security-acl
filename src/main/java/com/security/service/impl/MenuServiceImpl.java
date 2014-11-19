@@ -1,14 +1,15 @@
 package com.security.service.impl;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.security.model.Menu;
 import com.security.repository.MenuRepository;
 import com.security.service.MenuService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreFilter;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * @author Thiago
@@ -43,5 +44,11 @@ public class MenuServiceImpl implements MenuService {
 	@Override
 	public void deleteAll() {
 		menuRepository.deleteAll();
+	}
+
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	@PreFilter("hasPermission(filterObject, 'administration')")
+	public List<Menu> testFilterMenu(List<Menu> menus) {
+		return menus;
 	}
 }

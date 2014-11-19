@@ -1,16 +1,13 @@
 /**
  * 
  */
-package com.security.test.security;
+package com.security.service.impl;
 
 import com.security.model.Menu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.access.prepost.PreFilter;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * 
@@ -21,7 +18,7 @@ import java.util.List;
 public class SecurityTestService {
 
 	private static final Logger log = LoggerFactory.getLogger(SecurityTestService.class);
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public boolean testHasRoleAdmin() {
 		log.info("access granted to hasRole('ROLE_ADMIN')");
@@ -50,11 +47,5 @@ public class SecurityTestService {
 	public boolean testHasPermissionReadOnMenu(Menu menu) {
 		log.info("access granted to hasPermission(#menu, 'read')");
 		return true;
-	}
-
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	@PreFilter("hasPermission(filterObject, 'administration')")
-	public List<Menu> testFilterMenu(List<Menu> list) {
-		return list;
 	}
 }

@@ -49,4 +49,6 @@ public interface AclManager {
 	 * @return true or false
 	 */
 	public <T> boolean isPermissionGranted(Class<T> clazz, Serializable identifier, Sid sid, Permission permission);
+
+	void deleteAllGrantedAcl();
 }

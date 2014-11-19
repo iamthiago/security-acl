@@ -9,6 +9,7 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.MutableAcl;
@@ -34,6 +35,7 @@ public class AclManagerImpl implements AclManager {
 	private static final Logger log = LoggerFactory.getLogger(AclManagerImpl.class);
 	
 	@Autowired private MutableAclService aclService;
+	@Autowired private JdbcTemplate jdbcTemplate;
 	
 	@Override
 	public <T> void addPermission(Class<T> clazz, Serializable identifier, Sid sid, Permission permission) {
@@ -92,5 +94,13 @@ public class AclManagerImpl implements AclManager {
 		} catch (NotFoundException e) {
 			acl.insertAce(acl.getEntries().size(), permission, sid, true);
 		}
+	}
+
+	@Override
+	public void deleteAllGrantedAcl() {
+		jdbcTemplate.update("delete from acl_entry");
+		jdbcTemplate.update("delete from acl_object_identity");
+		jdbcTemplate.update("delete from acl_sid");
+		jdbcTemplate.update("delete from acl_class");
 	}
 }

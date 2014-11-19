@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.security.service.impl.SecurityTestService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,6 +67,7 @@ public class SecurityAclTest extends AbstractSecurityTest {
 		jdbcUserDetailsManager.deleteUser(USER_ADMIN);
 		jdbcUserDetailsManager.deleteUser(USER_USER);
 		menuService.deleteAll();
+		aclManager.deleteAllGrantedAcl();
 		SecurityContextHolder.getContext().setAuthentication(null);
 	}
 	
@@ -152,6 +154,7 @@ public class SecurityAclTest extends AbstractSecurityTest {
 	public void testFilterList() {
 
 		menuService.deleteAll();
+		aclManager.deleteAllGrantedAcl();
 
 		for (int i = 0; i < 5; i++) {
 			Menu m = new Menu();
@@ -160,7 +163,7 @@ public class SecurityAclTest extends AbstractSecurityTest {
 
 			Menu newMenu = menuService.saveOrUpdate(m);
 
-			if (i < 3) {
+			if (i < 2) {
 				aclManager.addPermission(Menu.class, newMenu.getId(), new GrantedAuthoritySid("ROLE_ADMIN"), BasePermission.ADMINISTRATION);
 			} else {
 				aclManager.addPermission(Menu.class, newMenu.getId(), new GrantedAuthoritySid("ROLE_USER"), BasePermission.READ);
@@ -168,11 +171,11 @@ public class SecurityAclTest extends AbstractSecurityTest {
 		}
 
 		userGroupManager.setAuthentication(USER_ADMIN);
-		assertThat(securityTestService.testFilterMenu(menuService.findAll()).size(), is(equalTo(3)));
+		assertThat(menuService.testFilterMenu(menuService.findAll()).size(), is(equalTo(2)));
 
 		userGroupManager.setAuthentication(USER_USER);
 		exception.expect(AccessDeniedException.class);
-		securityTestService.testFilterMenu(menuService.findAll());
+		menuService.testFilterMenu(menuService.findAll());
 	}
 	
 	@Test

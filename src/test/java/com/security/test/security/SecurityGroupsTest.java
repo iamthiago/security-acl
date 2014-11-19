@@ -11,6 +11,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.security.service.impl.SecurityTestService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

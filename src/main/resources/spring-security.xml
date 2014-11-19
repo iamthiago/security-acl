@@ -18,12 +18,7 @@
 	<http pattern="/resources/**" security="none"/>
 	
 	<http use-expressions="true" auto-config="false" entry-point-ref="http403EntryPoint">
-
-		<session-management>
-			<concurrency-control error-if-maximum-exceeded="true" max-sessions="1"/>
-		</session-management>
-
-		<logout 
+		<logout
 			invalidate-session="true"
 			delete-cookies="JSESSIONID" />
 			

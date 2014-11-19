@@ -46,4 +46,8 @@
 
     <tx:annotation-driven transaction-manager="txManager"/>
 
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
 </beans>
